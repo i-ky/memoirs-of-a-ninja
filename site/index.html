@@ -23,6 +23,8 @@
                 if (header !== "# ninja log v5") {
                     alert("Judging by the first line, this is not a Ninja build log file.");
                 } else {
+                    const last = lines.pop()
+                    console.assert(last === "")
                     var data = [];
                     var outputs = new Set();
                     for (const line of lines) {
