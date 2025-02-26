@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="..." />
+    <title>Memoirs of a Ninja</title>
+</head>
+
+<body>
+    <!-- https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications -->
+    <label for="log">Choose a Ninja build log:</label>
+    <input type="file" id="log" name="log" accept=".ninja_log" />
+    <div id="plot"></div>
+    <script type="module">
+        import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
+        log.addEventListener("change", process, false);
+        async function process() {
+            for (const file of this.files) {
+                const text = await file.text();
+                const [header, ...lines] = text.split("\n");
+                if (header !== "# ninja log v5") {
+                    alert("Judging by the first line, this is not a Ninja build log file.");
+                } else {
+                    var data = [];
+                    var outputs = new Set();
+                    for (const line of lines) {
+                        var [start, end, timestamp, output, hashsum] = line.split("\t");
+                        start = parseInt(start);
+                        end = parseInt(end);
+                        timestamp = parseInt(timestamp);
+                        const date = new Date(timestamp / 1000000);
+                        data.push({ t: date, d: end - start, o: output })
+                    }
+                    plot.append(Plot.plot({
+                        color: { legend: true },
+                        marks: [
+                            Plot.lineY(data, { x: "t", y: "d", stroke: "o" }),
+                            // Plot.areaY(data, { x: "t", y: "d", fill: "o" }),
+                            Plot.ruleY([0])
+                        ]
+                    }));
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
