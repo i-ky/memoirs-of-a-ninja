@@ -26,7 +26,6 @@
                     const last = lines.pop()
                     console.assert(last === "")
                     var data = [];
-                    var outputs = new Set();
                     for (const line of lines) {
                         var [start, end, timestamp, output, hashsum] = line.split("\t");
                         start = parseInt(start);
@@ -35,10 +34,26 @@
                         const date = new Date(timestamp / 1000000);
                         data.push({ t: date, d: end - start, o: output })
                     }
+                    data.sort((a, b) => a.t - b.t);
+                    var totals = [];
+                    var duration = new Map();
+                    var total = new Map();
+                    for (const datum of data) {
+                        const [root, ..._] = datum.o.split("/");
+                        var t = total.has(root) ? total.get(root) : 0;
+                        if (duration.has(datum.o)) {
+                            t -= duration.get(datum.o);
+                        }
+                        t += datum.d;
+                        total.set(root, t);
+                        duration.set(datum.o, datum.d);
+                        totals.push({ t: datum.t, d: t, o: root + "/" });
+                    }
                     plot.append(Plot.plot({
                         color: { legend: true },
+                        y: { type: "log" },
                         marks: [
-                            Plot.lineY(data, { x: "t", y: "d", stroke: "o" }),
+                            Plot.lineY(totals, { x: "t", y: "d", stroke: "o" }),
                             // Plot.areaY(data, { x: "t", y: "d", fill: "o" }),
                             Plot.ruleY([0])
                         ]
